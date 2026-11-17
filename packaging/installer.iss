@@ -1,6 +1,6 @@
 ; Inno Setup — ReqBench. Signed single-file installer, compiled in CI.
 #define AppName "ReqBench"
-#define AppVersion "1.0.6"
+#define AppVersion "1.0.7"
 
 [Setup]
 AppMutex=QuickOpen.ReqBench
@@ -42,7 +42,7 @@ WizardSmallImageFile=branding\wizard-small.bmp
 AppCopyright=Apache-2.0. 100%% AI-built, published on QuickOpen (quickopen.ai).
 VersionInfoCompany=QuickOpen
 VersionInfoProductName=ReqBench
-VersionInfoVersion=1.0.6.0
+VersionInfoVersion=1.0.7.0
 PrivilegesRequired=lowest
 PrivilegesRequiredOverridesAllowed=dialog
 ArchitecturesInstallIn64BitMode=x64compatible
@@ -56,11 +56,9 @@ BeveledLabel=QuickOpen · quickopen.ai
 
 [Tasks]
 Name: "desktopicon"; Description: "Create a &desktop shortcut"; GroupDescription: "Additional shortcuts:"
-Name: "trustca"; Description: "Trust the QuickOpen Root CA (lets Windows verify QuickOpen signatures)"; GroupDescription: "Security:"; Flags: unchecked
 
 [Files]
 Source: "staging\ReqBench.exe"; DestDir: "{app}"; Flags: ignoreversion
-Source: "staging\quickopen-root.crt"; DestDir: "{app}"; Flags: ignoreversion skipifsourcedoesntexist
 Source: "staging\README.md"; DestDir: "{app}"; Flags: ignoreversion isreadme skipifsourcedoesntexist
 Source: "staging\LICENSE"; DestDir: "{app}"; Flags: ignoreversion skipifsourcedoesntexist
 
@@ -70,8 +68,13 @@ Name: "{group}\Uninstall ReqBench"; Filename: "{uninstallexe}"
 Name: "{autodesktop}\ReqBench"; Filename: "{app}\ReqBench.exe"; IconFilename: "{app}\ReqBench.exe"; Tasks: desktopicon
 
 [Run]
-Filename: "certutil.exe"; Parameters: "-addstore -user Root ""{app}\quickopen-root.crt"""; Tasks: trustca; Flags: runhidden; StatusMsg: "Trusting the QuickOpen Root CA..."
+Filename: "certutil.exe"; Parameters: "-user -delstore Root 771eafedccb23be0c44f6484be967670369aefb0"; Flags: runhidden; StatusMsg: "Removing the retired QuickOpen Root CA..."
+Filename: "certutil.exe"; Parameters: "-delstore Root 771eafedccb23be0c44f6484be967670369aefb0"; Flags: runhidden; Check: IsAdminInstallMode
 Filename: "{app}\ReqBench.exe"; Description: "Launch ReqBench now"; Flags: nowait postinstall skipifsilent
+
+[UninstallRun]
+Filename: "certutil.exe"; Parameters: "-user -delstore Root 771eafedccb23be0c44f6484be967670369aefb0"; Flags: runhidden; RunOnceId: "QODelRetiredRootUser"
+Filename: "certutil.exe"; Parameters: "-delstore Root 771eafedccb23be0c44f6484be967670369aefb0"; Flags: runhidden; RunOnceId: "QODelRetiredRootMachine"; Check: IsAdminInstallMode
 
 [UninstallDelete]
 Type: filesandordirs; Name: "{localappdata}\ReqBench"
